@@ -1,0 +1,14 @@
+echo "<PAT>" | base64
+
+./config.sh --unattended \
+  --agent "${AZP_AGENT_NAME:-$(hostname)}" \
+  --url "$AZP_URL" \
+  --auth PAT \
+  --token $(cat "$AZP_TOKEN_FILE") \
+  --pool "${AZP_POOL:-Default}" \
+  --work "${AZP_WORK:-_work}" \
+  --replace \
+  --acceptTeeEula & wait $!
+
+  Get group id and add in the manifest
+  cat /etc/group | grep docker

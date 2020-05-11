@@ -1,0 +1,7 @@
+variables:
+-  name: ACR_ADDRESS
+   value: $(ACR_ADDRESS)
+-  name: ACR_PASSWORD
+   value: $(ACR_PASSWORD)
+-  name: ACR_USER
+   value: $(ACR_USER)

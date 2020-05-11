@@ -1,0 +1,77 @@
+trigger: 
+-  master
+
+pool:
+  name: <Agent Pool Name>
+
+variables:
+  -  template: template-variables.yaml
+
+stages:
+
+-  stage: 'Build'
+   displayName: 'Build'
+   jobs:
+   - job: 'Build'
+     steps:
+     - task: DotNetCoreCLI@2
+       displayName: 'dotnet test'
+       inputs:
+         command: test
+         projects: 'test/**/*.csproj'
+         testRunTitle: 'Unit Tests for IoT Modules'
+
+     - task: AzureIoTEdge@2
+       displayName: 'Azure IoT Edge - Build module images'
+       inputs:
+         defaultPlatform: arm32v7
+
+     - task: AzureIoTEdge@2
+       displayName: 'Azure IoT Edge - Push module images'
+       inputs:
+        action: 'Push module images'
+        azureSubscriptionEndpoint: '<Azure Subscirption>'
+        azureContainerRegistry: '<Azure Container Registry'
+        defaultPlatform: arm32v7
+        fillRegistryCredential: 'false'
+
+     - task: CopyFiles@2
+       displayName: 'Copy Files to drop folders'
+       inputs:
+         Contents: |
+          deployment.template.json
+         TargetFolder: '$(Build.ArtifactStagingDirectory)/config/'
+
+     - task: PublishBuildArtifacts@1
+       inputs:
+         PathtoPublish: '$(Build.ArtifactStagingDirectory)/config/'
+         ArtifactName: 'drop'
+
+-  stage: 'Deploy'
+   displayName: 'Deploy'
+   jobs:
+   -  deployment: Deployment
+      displayName: 'Deploy Azure IoT Modules'
+      environment: Production
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - download: current
+              artifact: drop
+            - task: AzureIoTEdge@2
+              inputs:
+                action: 'Generate deployment manifest'
+                templateFilePath: 'deployment.template.json'
+                defaultPlatform: 'arm32v7'
+                deploymentManifestOutputPath: '$(Build.ArtifactStagingDirectory)/config/deployment.json'
+            - task: AzureIoTEdge@2
+              inputs:
+                action: 'Deploy to IoT Edge devices'
+                deploymentFilePath: '$(Build.ArtifactStagingDirectory)/config/deployment.json'
+                azureSubscription: '<Azure Subscription>'
+                iothubname: 'F1-IoT-Hub'
+                deploymentid: '$(System.TeamProject)-devops-deployment'
+                priority: '0'
+                deviceOption: 'Single Device'
+                deviceId: 'F1-Device01'
