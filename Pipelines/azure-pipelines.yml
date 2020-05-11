@@ -62,7 +62,7 @@ stages:
             - task: AzureIoTEdge@2
               inputs:
                 action: 'Generate deployment manifest'
-                templateFilePath: 'deployment.template.json'
+                templateFilePath: '$(Build.ArtifactStagingDirectory)/config/deployment.template.json'
                 defaultPlatform: 'arm32v7'
                 deploymentManifestOutputPath: '$(Build.ArtifactStagingDirectory)/config/deployment.json'
             - task: AzureIoTEdge@2
@@ -70,8 +70,8 @@ stages:
                 action: 'Deploy to IoT Edge devices'
                 deploymentFilePath: '$(Build.ArtifactStagingDirectory)/config/deployment.json'
                 azureSubscription: '<Azure Subscription>'
-                iothubname: 'F1-IoT-Hub'
+                iothubname: '<IoTHub>'
                 deploymentid: '$(System.TeamProject)-devops-deployment'
                 priority: '0'
                 deviceOption: 'Single Device'
-                deviceId: 'F1-Device01'
+                deviceId: '<DeviceID>'
